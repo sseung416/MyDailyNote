@@ -1,6 +1,7 @@
 package com.github.sseung416.mydailynote.local.dto
 
 import androidx.room.*
+import java.util.Date
 
 @Entity(
     tableName = "todo",
@@ -13,7 +14,7 @@ data class Todo(
     @PrimaryKey(autoGenerate = true) var id: Int? = null,
     @ColumnInfo(name = "goal_id") val goalId: Int,
     var todo: String,
-    var date: String,
+    var date: Date,
     var isCompleted: Boolean = false,
     var isRepeat: Boolean = false,
 ) {
