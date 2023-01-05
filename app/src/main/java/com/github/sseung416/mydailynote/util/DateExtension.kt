@@ -1,10 +1,12 @@
-package com.github.sseung416.mydailynote
+package com.github.sseung416.mydailynote.util
 
 import java.text.SimpleDateFormat
 import java.util.*
 
 private const val FORMAT = "yyyyMMdd"
 private val calendar = Calendar.getInstance()
+
+internal val currentDate = Calendar.getInstance().time
 
 fun getTodayString(): String = calendar.time.formatToString()
 

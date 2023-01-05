@@ -9,113 +9,108 @@ import androidx.compose.foundation.lazy.GridCells
 import androidx.compose.foundation.lazy.LazyVerticalGrid
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.AlertDialog
-import androidx.compose.material.Colors
-import androidx.compose.material.IconButton
 import androidx.compose.material.Surface
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import com.github.sseung416.mydailynote.base.*
+import com.github.sseung416.mydailynote.component.base.AppTextField
+import com.github.sseung416.mydailynote.component.base.BoldText
+import com.github.sseung416.mydailynote.component.base.ImageButton
+import com.github.sseung416.mydailynote.component.base.ImageTextButton
+import com.github.sseung416.mydailynote.local.dto.Goal
 import com.github.sseung416.mydailynote.ui.theme.GoalColor
 
 // https://blog.logrocket.com/adding-alertdialog-jetpack-compose-android-apps/
-
 @Composable
 fun EditTodoDialog(
     onEditButtonClick: () -> Unit,
     onDeleteButtonClick: () -> Unit,
     onTomorrowButtonClick: () -> Unit,
-    onRepeatButtonClick: () -> Unit,
+    onRepeatButtonClick: () -> Unit
 ) {
-    var showDialog by remember { mutableStateOf(true) }
-    val dismissListener = { showDialog = true } // TODO: 이거 맞음? 
+    AppAlertDialog {
+        Row(modifier = Modifier.fillMaxWidth()) {
+            ImageTextButton(
+                onClick = onEditButtonClick,
+                text = "수정",
+                imageResourceId = R.drawable.ic_circle_edit,
+                drawableDescription = "edit"
+            )
 
-    if (showDialog) {
-        AppAlertDialog {
-            Row(modifier = Modifier.fillMaxWidth()) {
-                ImageTextButton(
-                    onClick = concatListener(onEditButtonClick, dismissListener),
-                    text = "수정",
-                    imageResourceId = R.drawable.ic_circle_edit,
-                    drawableDescription = "edit"
-                )
+            ImageTextButton(
+                onClick = onDeleteButtonClick,
+                text = "삭제",
+                imageResourceId = R.drawable.ic_circle_close,
+                drawableDescription = "delete"
+            )
 
-                ImageTextButton(
-                    onClick = concatListener(onDeleteButtonClick, dismissListener),
-                    text = "삭제",
-                    imageResourceId = R.drawable.ic_circle_close,
-                    drawableDescription = "delete"
-                )
+            ImageTextButton(
+                onClick = onTomorrowButtonClick,
+                text = "내일하기",
+                imageResourceId = R.drawable.ic_circle_next,
+                drawableDescription = "tomorrow"
+            )
 
-                ImageTextButton(
-                    onClick = concatListener(onTomorrowButtonClick, dismissListener),
-                    text = "내일하기",
-                    imageResourceId = R.drawable.ic_circle_next,
-                    drawableDescription = "tomorrow"
-                )
-
-                ImageTextButton(
-                    onClick = concatListener(onTomorrowButtonClick, dismissListener),
-                    text = "반복",
-                    imageResourceId = R.drawable.ic_circle_repeat,
-                    drawableDescription = "repeat"
-                )
-            }
-        }
-    }
-}
-
-// todo showDialog 부분 어떻게 베이스 다이얼로그로 옮길지 고민하기
-@Composable
-@ExperimentalFoundationApi
-fun AddGoalDialog() {
-    var showDialog by remember { mutableStateOf(true) } // 근데 이렇게 하는거 맞긴 함?
-
-    if (showDialog) {
-        AppAlertDialog {
-            Column {
-                Row {
-                    ImageButton(
-                        onClick = { showDialog = !showDialog },
-                        imageResourceId = R.drawable.ic_close,
-                        drawableDescription = "dismiss"
-                    )
-
-                    // https://tedblob.com/jetpack-compose-spacer/
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    ImageButton(
-                        onClick = { /*TODO*/ },
-                        imageResourceId = R.drawable.ic_check,
-                        drawableDescription = "confirm"
-                    )
-                }
-
-                AppTextField("목표를 입력해주세요!")
-                
-                Spacer(modifier = Modifier.size(24.dp))
-                
-                BoldText(text = "대표 색")
-
-                ColorPalette()
-            }
+            ImageTextButton(
+                onClick = onRepeatButtonClick,
+                text = "반복",
+                imageResourceId = R.drawable.ic_circle_repeat,
+                drawableDescription = "repeat"
+            )
         }
     }
 }
 
 @Composable
-@ExperimentalFoundationApi
+fun AddGoalDialog(
+    onConfirmButtonClick: (Goal) -> Unit,
+    onCloseButtonClick: () -> Unit
+) {
+    var text by rememberSaveable { mutableStateOf("") }
+
+    val onConfirmButtonClickListener = {
+        val goal = Goal(name = text, color = "") // todo 쒸익,,쒸익,,,,,,
+        onConfirmButtonClick.invoke(goal)
+    }
+
+    AppAlertDialog {
+        Column {
+            Row {
+                ImageButton(
+                    onClick = onCloseButtonClick,
+                    imageResourceId = R.drawable.ic_close,
+                    drawableDescription = "dismiss"
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                ImageButton(
+                    onClick = onConfirmButtonClickListener,
+                    imageResourceId = R.drawable.ic_check,
+                    drawableDescription = "confirm"
+                )
+            }
+
+            AppTextField(text = text, placeholder = "목표를 입력해주세요!", onValueChange = { text = it })
+            Spacer(modifier = Modifier.size(24.dp))
+
+            BoldText(text = "대표 색")
+            ColorPalette()
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
 private fun ColorPalette() {
     // 선택한 색상의 인덱스 값
-    var selectedIndex by remember { mutableStateOf(-1) }
+    var selectedIndex by rememberSaveable { mutableStateOf(0) }
 
     LazyVerticalGrid(cells = GridCells.Fixed(5)) {
-        itemsIndexed(GoalColor.getAllColors()) { index, item ->
+        itemsIndexed(GoalColor.values()) { index, item ->
             // 색상 선택 버튼
             ImageButton(
                 onClick = {
@@ -123,7 +118,7 @@ private fun ColorPalette() {
                 },
                 imageResourceId = R.drawable.ic_circle_solid,
                 drawableDescription = "goal color $index",
-                imageTintColor = item
+                imageTintColor = item.color
             ) {
                 // todo drawable 웃는 얼굴로 바꾸기, 첫 번째 색상 미리 선택되어 있게 만들기
 
@@ -151,13 +146,12 @@ private fun PreviewEditTodoDialog() {
         onRepeatButtonClick = { printLog("repeat") })
 }
 
-@ExperimentalFoundationApi
 @Composable
 @Preview(showBackground = true)
 private fun PreviewAddGoalDialog() {
     val printLog = { str: String -> Log.d("PreviewAddGoalDialog", "$str button clicked") }
 
-    AddGoalDialog()
+    AddGoalDialog({}, {})
 }
 
 private val AppDialogBackground = Modifier
