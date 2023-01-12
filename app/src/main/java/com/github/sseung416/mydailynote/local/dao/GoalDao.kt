@@ -13,9 +13,9 @@ interface GoalDao : BaseDao<Goal> {
     @Query("SELECT * FROM GOAL")
     fun getGoals(): Flow<List<Goal>>
 
-    @Query("SELECT GOAL.*, TODO.* FROM GOAL " +
-            "LEFT OUTER JOIN TODO " +
-            "ON GOAL.ID = TODO.GOAL_ID " +
-            "WHERE TODO.DATE = :date")
+    @Query("SELECT G.*, T.* FROM GOAL G " +
+            "LEFT OUTER JOIN " +
+            "(SELECT * FROM TODO WHERE TODO.date = :date) T " +
+            "ON G.g_id = T.t_g_id")
     fun getAllGoalWithTodos(date: Date): Flow<Map<Goal, List<Todo>>>
 }

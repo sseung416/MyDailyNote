@@ -15,7 +15,7 @@ interface GoalRepository {
     /**
      * 모든 목표와 그 목표에 속해있는 할일을 조회함
      * */
-    fun getAllGoalsWithTodos(date: Date): Flow<SortedMap<Goal, List<Todo>>> // todo 키 값 오름차순으로 정렬
+    fun getAllGoalsWithTodos(date: Date): Flow<List<Any>>
 
     /**
      * 목표를 삽입함
