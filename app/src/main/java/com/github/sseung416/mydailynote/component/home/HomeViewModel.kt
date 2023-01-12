@@ -7,7 +7,6 @@ import com.github.sseung416.mydailynote.local.dto.Goal
 import com.github.sseung416.mydailynote.local.dto.Todo
 import com.github.sseung416.mydailynote.local.repository.GoalRepository
 import com.github.sseung416.mydailynote.local.repository.TodoRepository
-import com.github.sseung416.mydailynote.util.currentDate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -21,14 +20,14 @@ class HomeViewModel @Inject constructor(
 ) : ViewModel() {
 
     val uiState = MutableStateFlow(HomeUiState())
-    val dialogState = MutableStateFlow(HomeDialog.Nothing as HomeDialog) // todo rename
+    val dialogState = MutableStateFlow(HomeDialogState.Nothing as HomeDialogState)
 
     val allGoalsWithTodos = goalRepository.getAllGoalsWithTodos(uiState.value.selectedDate) // todo 다른 변수 값이 변경되도 업데이트되는지 테스트
         .stateIn(
             viewModelScope, SharingStarted.Lazily, mapOf()
         )
 
-    fun showDialog(type: HomeDialog) {
+    fun setDialogState(type: HomeDialogState = HomeDialogState.Nothing) {
         dialogState.value = type
     }
 
@@ -39,6 +38,11 @@ class HomeViewModel @Inject constructor(
             goalId = goalId,
             todoId = todoId
         )
+    }
+
+    // (목표 옆 버튼 눌렀을 때) 할일 추가
+    fun addTodoUi(goalId: Int) {
+        uiState.value = uiState.value.copy(goalIdWhenAddingTodo = goalId)
     }
 
     fun insertGoal(goal: Goal) {

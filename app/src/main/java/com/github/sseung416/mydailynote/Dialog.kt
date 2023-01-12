@@ -1,5 +1,6 @@
 package com.github.sseung416.mydailynote
 
+import android.os.Parcelable
 import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -22,42 +23,47 @@ import com.github.sseung416.mydailynote.component.base.AppTextField
 import com.github.sseung416.mydailynote.component.base.BoldText
 import com.github.sseung416.mydailynote.component.base.ImageButton
 import com.github.sseung416.mydailynote.component.base.ImageTextButton
+import com.github.sseung416.mydailynote.component.home.AddGoalDialogListener
 import com.github.sseung416.mydailynote.local.dto.Goal
 import com.github.sseung416.mydailynote.ui.theme.GoalColor
+import kotlinx.android.parcel.Parcelize
+import kotlinx.android.parcel.RawValue
 
-// https://blog.logrocket.com/adding-alertdialog-jetpack-compose-android-apps/
+@Parcelize
+data class IndexedValue<T>(val index: Int, val value: @RawValue T) : Parcelable
+
 @Composable
 fun EditTodoDialog(
-    onEditButtonClick: () -> Unit,
-    onDeleteButtonClick: () -> Unit,
-    onTomorrowButtonClick: () -> Unit,
-    onRepeatButtonClick: () -> Unit
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
+    onTomorrow: () -> Unit,
+    onRepeat: () -> Unit,
 ) {
     AppAlertDialog {
         Row(modifier = Modifier.fillMaxWidth()) {
             ImageTextButton(
-                onClick = onEditButtonClick,
+                onClick = onEdit,
                 text = "수정",
                 imageResourceId = R.drawable.ic_circle_edit,
                 drawableDescription = "edit"
             )
 
             ImageTextButton(
-                onClick = onDeleteButtonClick,
+                onClick = onDelete,
                 text = "삭제",
                 imageResourceId = R.drawable.ic_circle_close,
                 drawableDescription = "delete"
             )
 
             ImageTextButton(
-                onClick = onTomorrowButtonClick,
+                onClick = onTomorrow,
                 text = "내일하기",
                 imageResourceId = R.drawable.ic_circle_next,
                 drawableDescription = "tomorrow"
             )
 
             ImageTextButton(
-                onClick = onRepeatButtonClick,
+                onClick = onRepeat,
                 text = "반복",
                 imageResourceId = R.drawable.ic_circle_repeat,
                 drawableDescription = "repeat"
@@ -68,21 +74,21 @@ fun EditTodoDialog(
 
 @Composable
 fun AddGoalDialog(
-    onConfirmButtonClick: (Goal) -> Unit,
-    onCloseButtonClick: () -> Unit
+    addGoalDialogListener: AddGoalDialogListener
 ) {
     var text by rememberSaveable { mutableStateOf("") }
+    var selectedColor by rememberSaveable { mutableStateOf(IndexedValue(0, GoalColor.Red)) }
 
     val onConfirmButtonClickListener = {
-        val goal = Goal(name = text, color = "") // todo 쒸익,,쒸익,,,,,,
-        onConfirmButtonClick.invoke(goal)
+        val goal = Goal(name = text, goalColor = selectedColor.value)
+        addGoalDialogListener.onAdd(goal)
     }
 
     AppAlertDialog {
         Column {
             Row {
                 ImageButton(
-                    onClick = onCloseButtonClick,
+                    onClick = addGoalDialogListener::onClose,
                     imageResourceId = R.drawable.ic_close,
                     drawableDescription = "dismiss"
                 )
@@ -94,34 +100,37 @@ fun AddGoalDialog(
                 )
             }
 
-            AppTextField(text = text, placeholder = "목표를 입력해주세요!", onValueChange = { text = it })
+            AppTextField(
+                text = text,
+                placeholder = "목표를 입력해주세요!",
+                onValueChange = { text = it }
+            )
             Spacer(modifier = Modifier.size(24.dp))
 
             BoldText(text = "대표 색")
-            ColorPalette()
+            ColorPalette(
+                selectedIndex = selectedColor.index,
+                onColorChange = { selectedColor = it })
         }
     }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun ColorPalette() {
-    // 선택한 색상의 인덱스 값
-    var selectedIndex by rememberSaveable { mutableStateOf(0) }
-
+private fun ColorPalette(
+    selectedIndex: Int,
+    onColorChange: (IndexedValue<GoalColor>) -> Unit
+) {
     LazyVerticalGrid(cells = GridCells.Fixed(5)) {
         itemsIndexed(GoalColor.values()) { index, item ->
             // 색상 선택 버튼
             ImageButton(
-                onClick = {
-                    selectedIndex = index
-                },
+                onClick = { onColorChange.invoke(IndexedValue(index, item)) },
                 imageResourceId = R.drawable.ic_circle_solid,
                 drawableDescription = "goal color $index",
                 imageTintColor = item.color
             ) {
-                // todo drawable 웃는 얼굴로 바꾸기, 첫 번째 색상 미리 선택되어 있게 만들기
-
+                // todo drawable 웃는 얼굴로 바꾸기
                 if (selectedIndex == index) {
                     Image(
                         painter = painterResource(id = R.drawable.ic_check),
@@ -140,18 +149,17 @@ private fun PreviewEditTodoDialog() {
     val printLog = { str: String -> Log.d("PreviewEditTodoDialog", "$str button clicked") }
 
     EditTodoDialog(
-        onEditButtonClick = { printLog("edit") },
-        onDeleteButtonClick = { printLog("delete") },
-        onTomorrowButtonClick = { printLog("tomorrow") },
-        onRepeatButtonClick = { printLog("repeat") })
+        onEdit = { printLog("edit") },
+        onDelete = { printLog("delete") },
+        onTomorrow = { printLog("tomorrow") },
+        onRepeat = { printLog("repeat") })
 }
 
 @Composable
 @Preview(showBackground = true)
 private fun PreviewAddGoalDialog() {
     val printLog = { str: String -> Log.d("PreviewAddGoalDialog", "$str button clicked") }
-
-    AddGoalDialog({}, {})
+//    AddGoalDialog({}, {})
 }
 
 private val AppDialogBackground = Modifier

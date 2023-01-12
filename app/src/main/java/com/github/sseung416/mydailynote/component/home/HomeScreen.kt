@@ -98,32 +98,19 @@ fun HomeScreen(
             drawableDescription = "menu"
         )
 
-        // 다이얼로그 표시
-        when (showDialog) {
-            is HomeDialog.EditTodo -> {
-                val todo = (showDialog as HomeDialog.EditTodo).todo
-
-                EditTodoDialog(
-                    onEditButtonClick = { viewModel.`꼭바꿔라`(todoId = todo.id) },
-                    onDeleteButtonClick = { viewModel.deleteTodo(todo) },
-                    onTomorrowButtonClick = { /*TODO*/ },
-                    onRepeatButtonClick = { }
-                )
-            }
-
-            HomeDialog.Menu -> {
-
-            }
-
-            HomeDialog.AddGoal -> {
-                AddGoalDialog(
-                    onConfirmButtonClick = { goal -> viewModel.insertGoal(goal) },
-                    onCloseButtonClick = { viewModel.showDialog(HomeDialog.Nothing) }
-                )
-            }
-
-            HomeDialog.Nothing -> {}
-        }
+        DialogContent(
+            dialogState = showDialog,
+            editTodoDialogListener = lambdaToInterface(
+                viewModel::updateTodo,
+                viewModel::deleteTodo,
+                {},
+                {}
+            ),
+            addGoalDialogListener = lambdaToInterface(
+                viewModel::insertGoal,
+                viewModel::setDialogState
+            )
+        )
     }
 }
 
@@ -175,106 +162,81 @@ private fun TodoToolbar(onClick: () -> Unit) {
 }
 
 @Composable
-private fun DateCard(
-    checked: Boolean = false, // 선택되었는지 여부
-    isVisibleDay: Boolean = true, // 요일 표시 여부
-    hasTodo: Boolean = false, // 할일을 작성했는지 여부
-    onClick: () -> Unit,
+fun DialogContent(
+    dialogState: HomeDialogState,
+    editTodoDialogListener: EditTodoDialogListener,
+    addGoalDialogListener: AddGoalDialogListener
 ) {
-    val color = if (checked) {
-        Color.Black
-    } else {
-        Color.DarkGray
-    }
+    when (dialogState) {
+        is HomeDialogState.EditTodo -> {
+            val todo = dialogState.todo
 
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .padding(5.dp, 0.dp)
-            .clickable { onClick.invoke() }
-    ) {
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(39.dp)) {
-            Image(
-                painter = painterResource(R.drawable.ic_circle_border),
-                contentDescription = "date circle",
-                colorFilter = ColorFilter.tint(color)
-            )
-
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                BoldText(text = "12", color = color, fontSize = 11.sp)
-
-                if (isVisibleDay)
-                    BoldText(text = "금", color = color, fontSize = 9.sp)
-            }
-        }
-
-        Spacer(modifier = Modifier.height(4.dp))
-
-        // 날짜별 할일이 있는지 체크
-        if (hasTodo) {
-            Box(
-                modifier = Modifier
-                    .clip(CircleShape)
-                    .background(color)
-                    .size(5.dp)
+            EditTodoDialog(
+                onEdit = { editTodoDialogListener.onEdit(todo) },
+                onDelete = { editTodoDialogListener.onDelete(todo) },
+                onRepeat = { editTodoDialogListener.onRepeat(todo) },
+                onTomorrow = { editTodoDialogListener.onTomorrow(todo) }
             )
         }
-    }
-}
 
-@Composable
-private fun GoalItem(
-    goal: Goal,
-    onAddButtonClick: () -> Unit
-) {
-    val color = GoalColor.valueOf(goal.color).color
-
-    Row(modifier = Modifier.background(color)) {
-        RegularText(text = goal.name)
-        ImageButton(
-            onClick = onAddButtonClick,
-            imageResourceId = R.drawable.ic_add,
-            drawableDescription = "add todo",
-            imageTintColor = color
-        )
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun TodoItem(
-    todo: Todo,
-    onLongClick: () -> Unit
-) {
-    var checked by rememberSaveable { mutableStateOf(false) }
-
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(0.dp, 8.dp)
-    ) {
-        // checkBox drawable
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.combinedClickable(
-                onClick = { checked = checked.not() },
-                onLongClick = onLongClick
-            ),
-        ) {
-            TodoCheckBox(checked = checked)
+        HomeDialogState.Menu -> {
+            AddGoalDialog(addGoalDialogListener = addGoalDialogListener)
         }
 
-        Spacer(modifier = Modifier.width(8.dp))
+        HomeDialogState.AddGoal -> {}
 
-        RegularText(text = todo.todo)
+        HomeDialogState.Nothing -> {}
     }
 }
 
-@Composable
-private fun TodoCheckBox(checked: Boolean) {
-    val imageRes =
-        if (checked) R.drawable.ic_checkbox_true else R.drawable.ic_checkbox_false
-    Image(
-        painter = painterResource(id = imageRes),
-        contentDescription = "check box drawable"
-    )
+interface EditTodoDialogListener {
+
+    fun onEdit(todo: Todo)
+    fun onDelete(todo: Todo)
+    fun onTomorrow(todo: Todo)
+    fun onRepeat(todo: Todo)
+}
+
+interface AddGoalDialogListener {
+
+    fun onAdd(goal: Goal)
+    fun onClose()
+}
+
+fun lambdaToInterface(
+    onEdit: (Todo) -> Unit,
+    onDelete: (Todo) -> Unit,
+    onTomorrow: (Todo) -> Unit,
+    onRepeat: (Todo) -> Unit,
+) = object : EditTodoDialogListener {
+
+    override fun onEdit(todo: Todo) {
+        onEdit.invoke(todo)
+    }
+
+    override fun onDelete(todo: Todo) {
+        onDelete.invoke(todo)
+    }
+
+    override fun onTomorrow(todo: Todo) {
+        onTomorrow.invoke(todo)
+    }
+
+    override fun onRepeat(todo: Todo) {
+        onRepeat.invoke(todo)
+    }
+}
+
+fun lambdaToInterface(
+    onAdd: (Goal) -> Unit,
+    onClose: () -> Unit
+) = object : AddGoalDialogListener {
+
+    override fun onAdd(goal: Goal) {
+        onAdd.invoke(goal)
+    }
+
+    override fun onClose() {
+        onClose.invoke()
+    }
 }
