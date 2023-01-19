@@ -1,7 +1,7 @@
 package com.github.sseung416.mydailynote.local.dto
 
 import androidx.room.*
-import java.util.Date
+import java.time.LocalDate
 
 @Entity(
     tableName = "todo",
@@ -21,7 +21,7 @@ data class Todo(
 
     var todo: String = "",
 
-    var date: Date,
+    var date: LocalDate = LocalDate.now(),
 
     var isCompleted: Boolean = false,
 

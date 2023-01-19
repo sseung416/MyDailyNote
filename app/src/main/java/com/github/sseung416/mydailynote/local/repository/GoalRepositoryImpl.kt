@@ -4,7 +4,7 @@ import com.github.sseung416.mydailynote.local.dao.GoalDao
 import com.github.sseung416.mydailynote.local.dto.Goal
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.transform
-import java.util.*
+import java.time.LocalDate
 
 class GoalRepositoryImpl(
     private val dao: GoalDao
@@ -13,7 +13,7 @@ class GoalRepositoryImpl(
     override fun getGoals(): Flow<List<Goal>> =
         dao.getGoals()
 
-    override fun getAllGoalsWithTodos(date: Date): Flow<List<Any>> =
+    override fun getAllGoalsWithTodos(date: LocalDate): Flow<List<Any>> =
         dao.getAllGoalWithTodos(date).transform { map ->
             val list = arrayListOf<Any>()
 

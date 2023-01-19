@@ -1,9 +1,8 @@
 package com.github.sseung416.mydailynote.local.repository
 
 import com.github.sseung416.mydailynote.local.dto.Goal
-import com.github.sseung416.mydailynote.local.dto.Todo
 import kotlinx.coroutines.flow.Flow
-import java.util.*
+import java.time.LocalDate
 
 interface GoalRepository {
 
@@ -15,7 +14,7 @@ interface GoalRepository {
     /**
      * 모든 목표와 그 목표에 속해있는 할일을 조회함
      * */
-    fun getAllGoalsWithTodos(date: Date): Flow<List<Any>>
+    fun getAllGoalsWithTodos(date: LocalDate): Flow<List<Any>>
 
     /**
      * 목표를 삽입함
